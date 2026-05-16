@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Défi Réflexes F1 - Cockpit</title>
+<style>
+  :root{
+    --red:#ff1515;
+    --green:#00ff72;
+    --yellow:#ffd43b;
+    --blue:#35b7ff;
+    --carbon:#07090d;
+    --panel:rgba(5,7,12,.82);
+    --glass:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;width:100%;height:100%;overflow:hidden;
+    font-family:Arial,Helvetica,sans-serif;color:white;background:#02030a;
+    user-select:none;
+  }
+  body{cursor:crosshair}
+  .scene{
+    position:relative;width:100vw;height:100vh;overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 28%, rgba(255,255,255,.22), transparent 16%),
+      linear-gradient(180deg,#657181 0%,#26303d 23%,#10141b 55%,#05060a 100%);
+  }
+
+  /* Ciel / tribunes */
+  .sunflare{position:absolute;inset:-20%;background:radial-gradient(circle at 50% 22%,rgba(255,255,255,.35),transparent 16%);opacity:.65;pointer-events:none}
+  .grandstand{position:absolute;top:12vh;width:43vw;height:30vh;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.72));border-top:4px solid rgba(255,255,255,.35);box-shadow:0 25px 50px rgba(0,0,0,.6)}
+  .grandstand.left{left:-2vw;clip-path:polygon(0 12%,100% 0,88% 100%,0 100%)}
+  .grandstand.right{right:-2vw;clip-path:polygon(0 0,100% 12%,100% 100%,12% 100%)}
+  .crowd{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 2px,transparent 2px 7px),repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 6px,transparent 6px 13px);opacity:.35}
+
+  /* Piste */
+  .track{
+    position:absolute;left:50%;top:22vh;width:min(94vw,980px);height:92vh;
+    transform:translateX(-50%) perspective(520px) rotateX(66deg);
+    transform-origin:50% 0;
+    background:
+      repeating-linear-gradient(0deg,rgba(255,255,255,.95) 0 18px,transparent 18px 42px),
+      linear-gradient(90deg,#070707 0 18%,#2d2d2d 18% 82%,#070707 82% 100%);
+    clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);
+    box-shadow:0 -20px 100px rgba(0,0,0,.85) inset;
+  }
+  .gridLine{position:absolute;left:50%;top:38vh;width:62vw;height:12vh;transform:translateX(-50%) perspective(420px) rotateX(63deg);background:repeating-linear-gradient(90deg,transparent 0 9%,rgba(255,255,255,.9) 9% 10%,transparent 10% 19%),repeating-linear-gradient(0deg,transparent 0 42%,rgba(255,255,255,.85) 42% 46%,transparent 46% 100%);opacity:.8;z-index:2;clip-path:polygon(35% 0,65% 0,100% 100%,0 100%)}
+
+  /* Titre */
+  .title{position:absolute;left:50%;top:1.4vh;transform:translateX(-50%);z-index:20;text-align:center;text-shadow:0 5px 16px #000;width:100%}
+  .title h1{margin:0;font-size:clamp(28px,5vw,76px);letter-spacing:3px;font-style:italic;line-height:.95}
+  .title p{margin:5px 0 0;color:var(--yellow);font-size:clamp(13px,1.5vw,22px);font-weight:900;letter-spacing:1px}
+
+  /* Feux F1 */
+  .gantry{position:absolute;left:50%;top:13.2vh;transform:translateX(-50%);z-index:30;width:min(720px,76vw)}
+  .gantryBar{height:16px;background:linear-gradient(#333,#050505);border:1px solid #555;border-radius:8px;box-shadow:0 8px 22px #000}
+  .lights{margin:auto;margin-top:8px;display:flex;justify-content:center;gap:11px;padding:13px;background:linear-gradient(#111,#030303);border:2px solid #333;border-radius:15px;box-shadow:0 18px 48px rgba(0,0,0,.9)}
+  .lightPod{width:clamp(54px,7vw,92px);height:clamp(54px,7vw,92px);border-radius:13px;background:#101010;border:2px solid #343434;display:grid;place-items:center;box-shadow:inset 0 0 16px #000}
+  .bulb{width:70%;height:70%;border-radius:50%;background:#250000;border:3px solid #4d0000;box-shadow:inset 0 0 22px #000}
+  .bulb.red.on{background:radial-gradient(circle,#fff 0 5%,#ff8a8a 8%,#ff0606 42%,#650000 76%);box-shadow:0 0 30px #f00,inset 0 0 18px rgba(255,255,255,.35)}
+  .bulb.green.on{background:radial-gradient(circle,#fff 0 5%,#8cffbd 8%,#00e866 42%,#006025 76%);border-color:#00551e;box-shadow:0 0 44px #00ff72,inset 0 0 18px rgba(255,255,255,.35)}
+  .dangerPulse{animation:dangerPulse .25s infinite alternate}
+  @keyframes dangerPulse{from{filter:drop-shadow(0 0 0 red)}to{filter:drop-shadow(0 0 28px red)}}
+
+  /* Cockpit */
+  .cockpitBase{position:absolute;left:-10vw;right:-10vw;bottom:-13vh;height:58vh;background:radial-gradient(ellipse at 50% 20%,#661010 0%,#17080a 35%,#020205 72%);clip-path:ellipse(70% 59% at 50% 78%);z-index:7;box-shadow:0 -18px 80px rgba(0,0,0,.8) inset}
+  .haloCenter{position:absolute;left:50%;top:35vh;width:16px;height:32vh;background:linear-gradient(90deg,#030303,#222,#030303);border:1px solid #444;border-radius:9px;transform:translateX(-50%);z-index:12;box-shadow:0 0 18px #000}
+  .haloRing{position:absolute;left:50%;top:42vh;width:min(78vw,820px);height:34vh;transform:translateX(-50%);border:16px solid rgba(3,3,3,.96);border-bottom:none;border-radius:50% 50% 0 0;z-index:11;box-shadow:0 0 35px #000}
+
+  .dashboard{position:absolute;left:50%;bottom:3.4vh;transform:translateX(-50%);z-index:40;width:min(880px,76vw);height:min(365px,41vh);background:linear-gradient(145deg,#191d24,#030406 65%);border:2px solid #3e4651;border-radius:34px;box-shadow:0 26px 80px rgba(0,0,0,.95),inset 0 0 40px rgba(255,255,255,.06);padding:18px 22px;display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:18px;align-items:center}
+  .carbon{background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 4px,transparent 4px 8px),linear-gradient(145deg,#111820,#050608);}
+  .gauge{aspect-ratio:1/1;border-radius:50%;border:5px solid #4d5660;background:radial-gradient(circle,#17202a 0%,#06070a 65%,#000 100%);position:relative;box-shadow:inset 0 0 24px #000,0 0 18px rgba(53,183,255,.14)}
+  .gauge::before{content:"";position:absolute;inset:10%;border-radius:50%;border:1px dashed rgba(255,255,255,.45)}
+  .gauge::after{content:"";position:absolute;left:50%;top:50%;width:17px;height:17px;background:#e8e8e8;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 10px #000;z-index:3}
+  .needle{position:absolute;left:50%;top:50%;width:42%;height:5px;background:#ff3030;border-radius:4px;transform-origin:left center;transform:rotate(135deg);box-shadow:0 0 9px #ff1010;z-index:2;transition:transform .18s ease}
+  .gauge .gTitle{position:absolute;top:35%;left:0;right:0;text-align:center;font-weight:900;font-size:clamp(14px,1.3vw,19px)}
+  .gauge .gSub{position:absolute;top:52%;left:0;right:0;text-align:center;color:#cbd5e1;font-size:12px}
+  .tick{position:absolute;left:50%;top:50%;width:2px;height:9%;background:rgba(255,255,255,.65);transform-origin:50% 0}
+  .centerPanel{height:100%;background:linear-gradient(180deg,#101823,#040507);border:2px solid #303946;border-radius:24px;box-shadow:inset 0 0 28px #000;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+  .chronoLabel{letter-spacing:3px;color:#9fb6cc;font-size:13px;font-weight:900}
+  #chrono{font-size:clamp(54px,6.6vw,96px);font-weight:1000;font-variant-numeric:tabular-nums;line-height:.95;text-shadow:0 0 22px rgba(53,183,255,.55)}
+  #status{font-size:clamp(17px,2vw,28px);font-weight:1000;color:var(--yellow);text-align:center;min-height:32px;text-shadow:0 3px 14px #000}
+  #startBtn{border:0;border-radius:13px;padding:14px 22px;background:linear-gradient(#ff4a44,#a60c0c);color:white;font-weight:1000;font-size:clamp(16px,1.5vw,22px);letter-spacing:1px;cursor:pointer;box-shadow:0 7px 0 #5a0707,0 16px 28px rgba(0,0,0,.85)}
+  #startBtn:active{transform:translateY(4px);box-shadow:0 3px 0 #5a0707,0 8px 18px rgba(0,0,0,.85)}
+  #startBtn:disabled{opacity:.55;cursor:not-allowed}
+
+  /* Infos et podium */
+  .rules{position:absolute;left:18px;top:18px;z-index:50;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:16px;box-shadow:0 20px 55px #000;backdrop-filter:blur(5px)}
+  .rules h3,.leaderboard h3{margin:0 0 10px;color:white;letter-spacing:1px}
+  .rules p{margin:7px 0;color:#e5e7eb;line-height:1.25}.rules b{color:var(--yellow)}.rules .warn{color:#ff6666;font-weight:1000}
+  .leaderboard{position:absolute;right:18px;bottom:18px;z-index:55;width:360px;background:var(--panel);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:15px;box-shadow:0 20px 55px #000;backdrop-filter:blur(6px)}
+  .firebaseState{font-size:12px;color:#9ca3af;margin-bottom:8px}
+  .scoreRow{display:grid;grid-template-columns:32px 1fr 78px;align-items:center;gap:8px;padding:9px 8px;margin:6px 0;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08)}
+  .rank{font-size:18px;font-weight:1000;color:var(--yellow);text-align:center}.who{font-weight:1000}.who small{display:block;color:#b7c0cc;font-weight:600;margin-top:2px}.score{font-weight:1000;text-align:right;color:#72ffad;font-variant-numeric:tabular-nums}
+
+  /* Modal */
+  .modal{position:absolute;inset:0;background:rgba(0,0,0,.82);z-index:100;display:none;place-items:center}
+
+  .introOverlay{
+    position:absolute;
+    inset:0;
+    z-index:200;
+    background:radial-gradient(circle at center,rgba(20,25,35,.92),rgba(0,0,0,.97));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .introBox{
+    width:min(700px,92vw);
+    background:linear-gradient(145deg,#131923,#05070b);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:24px;
+    padding:28px;
+    text-align:center;
+    box-shadow:0 30px 90px rgba(0,0,0,.9);
+  }
+
+  .introBox h2{
+    margin:0 0 12px;
+    font-size:42px;
+    color:var(--yellow);
+    text-shadow:0 4px 18px #000;
+  }
+
+  .introBox p{
+    color:#d9e2ec;
+    line-height:1.5;
+    font-size:18px;
+    margin:10px 0;
+  }
+
+  .rgpdWarn{
+    margin-top:18px;
+    padding:14px;
+    border-radius:14px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    color:#ffd9d9;
+    font-weight:700;
+  }
+
+  .introButtons{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    margin-top:24px;
+    flex-wrap:wrap;
+  }
+
+  .acceptBtn,.declineBtn{
+    border:0;
+    border-radius:14px;
+    padding:16px 24px;
+    font-size:18px;
+    font-weight:1000;
+    cursor:pointer;
+  }
+
+  .acceptBtn{
+    background:linear-gradient(#1ce276,#098b45);
+    color:white;
+    box-shadow:0 8px 20px rgba(0,0,0,.6);
+  }
+
+  .declineBtn{
+    background:linear-gradient(#ff4a4a,#a80f0f);
+    color:white;
+    box-shadow:0 8px 20px rgba(0,0,0,.6);
+  }
+  .modalBox{width:min(460px,92vw);background:linear-gradient(145deg,#171c25,#06070b);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:24px;text-align:center;box-shadow:0 30px 90px #000}
+  .modalBox h2{margin:0 0 10px;font-size:32px}.modalBox p{color:#d7dde7}.modalBox b{color:#72ffad}
+  .modalBox input{width:100%;margin:8px 0;padding:15px;border-radius:12px;border:1px solid #4b5563;background:#05070b;color:white;font-size:18px}
+  .modalBox button{margin-top:10px;width:100%;border:0;border-radius:12px;padding:15px;background:linear-gradient(#19d66d,#087b3e);color:white;font-size:18px;font-weight:1000;cursor:pointer}
+
+  .flashScreen{animation:flashScreen .18s linear 2}.shake{animation:shake .28s linear 3}
+  @keyframes flashScreen{50%{filter:brightness(1.8) saturate(1.4)}}
+  @keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+
+  .footer{position:absolute;left:50%;bottom:0;transform:translateX(-50%);z-index:56;width:100%;text-align:center;background:rgba(0,0,0,.66);font-size:12px;padding:7px;color:#cbd5e1;font-weight:800;letter-spacing:.6px}
+  /* WOW EFFECTS */
+
+  .ledStrip{display:flex;gap:4px;margin-top:6px}
+  .led{flex:1;height:12px;border-radius:4px;background:#1a1a1a;border:1px solid #333;transition:.15s}
+  .led.active{background:linear-gradient(#00ff73,#00a94d);box-shadow:0 0 14px #00ff73}
+
+  .raceBanner{
+    position:absolute;
+    left:18px;
+    bottom:18px;
+    z-index:55;
+    width:360px;
+    min-height:220px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:18px;
+    padding:18px;
+    box-shadow:0 20px 55px #000;
+    backdrop-filter:blur(6px);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    overflow:hidden;
+  }
+
+  .raceBanner::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.12) 45%,transparent 70%);
+    animation:bannerShine 3s linear infinite;
+    pointer-events:none;
+  }
+
+  @keyframes bannerShine{
+    from{transform:translateX(-120%)}
+    to{transform:translateX(120%)}
+  }
+
+  .raceBanner h3{
+    margin:0;
+    color:var(--yellow);
+    font-size:26px;
+    letter-spacing:2px;
+    text-shadow:0 3px 10px #000;
+  }
+
+  .raceBanner p{
+    margin:8px 0 14px;
+    color:#dbe4ef;
+    line-height:1.3;
+    font-weight:700;
+  }
+
+  .trackMap{
+    flex:1;
+    position:relative;
+    border-radius:14px;
+    background:linear-gradient(145deg,#0f1720,#040507);
+    border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .trackSvg{
+    width:88%;
+    height:88%;
+    filter:drop-shadow(0 0 12px rgba(255,212,59,.35));
+  }
+
+  .trackPath{
+    fill:none;
+    stroke:#ffffff;
+    stroke-width:10;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .trackGlow{
+    fill:none;
+    stroke:#ffd43b;
+    stroke-width:4;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-dasharray:18 10;
+    animation:trackMove 1.2s linear infinite;
+  }
+
+  @keyframes trackMove{
+    from{stroke-dashoffset:0}
+    to{stroke-dashoffset:-56}
+  }
+
+  .trackLabel{
+    position:absolute;
+    bottom:10px;
+    left:0;
+    right:0;
+    text-align:center;
+    font-size:14px;
+    color:#9fb6cc;
+    letter-spacing:1px;
+    font-weight:900;
+  }
+  @keyframes bannerPulse{from{transform:scale(1)}to{transform:scale(1.02)}}
+
+  .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 45%,rgba(0,0,0,.6) 100%);z-index:80}
+
+  .championFlash{animation:championFlash .6s linear 4}
+  @keyframes championFlash{50%{filter:hue-rotate(40deg) brightness(1.4)}}
+
+  @media(max-width:950px){
+    .rules{display:none}.leaderboard{right:10px;bottom:10px;width:310px}.dashboard{width:95vw;grid-template-columns:.75fr 1.5fr .75fr;gap:8px}.haloRing{display:none}.title h1{font-size:34px}.gantry{top:13vh}.footer{display:none}
+  }
+  @media(max-width:700px){.leaderboard{display:none}.dashboard{bottom:2vh}.gauge .gSub{display:none}.centerPanel{padding:10px}.lights{gap:6px;padding:9px}.lightPod{border-radius:9px}}
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+
+  <div class="introOverlay" id="introOverlay">
+    <div class="introBox">
+      <h2>🏁 DÉFI RÉFLEXES F1</h2>
+      <p>Bienvenue sur le simulateur réflexes Grand Prix Formula 1 du collège.</p>
+      <p>Affronte les autres joueurs et tente d’entrer dans la grille des 5 meilleurs pilotes.</p>
+
+      <div class="rgpdWarn">
+        Les données enregistrées (prénom, classe et score) sont stockées sur Firebase et ne constituent pas un hébergement conforme RGPD pour des données sensibles.
+        En continuant, vous acceptez l’enregistrement de ces informations dans le classement du jeu.
+      </div>
+
+      <div class="introButtons">
+        <button class="acceptBtn" id="acceptGame">ACCÉDER AU JEU</button>
+        <button class="declineBtn" id="declineGame">REFUSER</button>
+      </div>
+    </div>
+  </div>
+  <div class="sunflare"></div>
+  <div class="grandstand left"><div class="crowd"></div></div>
+  <div class="grandstand right"><div class="crowd"></div></div>
+  <div class="track"></div>
+  <div class="gridLine"></div>
+  <div class="vignette"></div>
+
+  <div class="raceBanner">
+    <h3>🏁 GRAND PRIX TECHNO</h3>
+    <p>Mode compétition automobile. Défie les meilleurs pilotes du collège et tente d’entrer dans le Top 5.</p>
+
+    <div class="trackMap">
+      <svg class="trackSvg" viewBox="0 0 500 300">
+        <path class="trackPath" d="M85 145 C80 70 185 40 255 72 C335 110 420 72 430 145 C440 235 320 255 250 228 C175 198 95 245 85 145 Z"/>
+        <path class="trackGlow" d="M85 145 C80 70 185 40 255 72 C335 110 420 72 430 145 C440 235 320 255 250 228 C175 198 95 245 85 145 Z"/>
+      </svg>
+      <div class="trackLabel">Circuit Jules Ferry International</div>
+    </div>
+  </div>
+
+  <div class="title">
+    <h1>DÉFI RÉFLEXES F1</h1>
+    <p>Attends le feu vert. Clique le plus vite possible. Faux départ interdit.</p>
+  </div>
+
+  <div class="gantry">
+    <div class="gantryBar"></div>
+    <div class="lights" id="lights">
+      <div class="lightPod"><div class="bulb red" id="b0"></div></div>
+      <div class="lightPod"><div class="bulb red" id="b1"></div></div>
+      <div class="lightPod"><div class="bulb red" id="b2"></div></div>
+      <div class="lightPod"><div class="bulb red" id="b3"></div></div>
+      <div class="lightPod"><div class="bulb red" id="b4"></div></div>
+    </div>
+  </div>
+
+  <div class="rules">
+    <h3>MODE COLLÈGE</h3>
+    <p><b>1.</b> Clique sur <b>Lancer</b>.</p>
+    <p><b>2.</b> Les rouges s’allument un par un.</p>
+    <p><b>3.</b> Quand tout est rouge, le vert arrive au hasard entre <b>3 et 8 s</b>.</p>
+    <p><b>4.</b> Clique dès le vert.</p>
+    <p class="warn">Cliquer avant le vert = éliminé.</p>
+  </div>
+
+  <div class="haloRing"></div>
+  <div class="haloCenter"></div>
+  <div class="cockpitBase"></div>
+
+  <div class="dashboard carbon">
+    <div class="gauge" id="rpmGauge">
+      <div class="needle" id="rpmNeedle"></div>
+      <div class="gTitle">RPM</div><div class="gSub">pression départ</div>
+    </div>
+    <div class="centerPanel">
+      <div class="chronoLabel">CHRONO RÉACTION</div>
+      <div class="ledStrip" id="ledStrip">
+        <div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div><div class="led"></div>
+      </div>
+      <div id="chrono">00.000</div>
+      <div id="status">PRÊT ?</div>
+      <button id="startBtn">LANCER LE DÉPART</button>
+    </div>
+    <div class="gauge" id="speedGauge">
+      <div class="needle" id="speedNeedle"></div>
+      <div class="gTitle">KM/H</div><div class="gSub">réflexe</div>
+    </div>
+  </div>
+
+  <div class="leaderboard">
+    <h3>🏆 GRILLE DES 5 MEILLEURS</h3>
+    <div class="firebaseState" id="firebaseState">Mode local — Firebase désactivée</div>
+    <div id="scores"></div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modalBox">
+      <h2>🏆 Entrée sur la grille !</h2>
+      <p>Temps réalisé : <b id="finalTime"></b> ms</p>
+      <input id="playerName" maxlength="18" placeholder="Prénom de l’élève" />
+      <input id="playerClass" maxlength="12" placeholder="Classe ex : 4eB" />
+      <button id="saveBtn">VALIDER LE SCORE</button>
+    </div>
+  </div>
+
+  <div class="footer">Développé pour un défi réflexes en technologie — classement Top 5 synchronisable avec Firebase Realtime Database</div>
+</div>
+
+<script type="module">
+/*
+  FIREBASE — à activer quand le jeu est validé :
+  1. Crée un projet Firebase.
+  2. Active Realtime Database.
+  3. Remplace firebaseConfig.
+  4. Passe USE_FIREBASE à true.
+  5. Les 5 meilleurs scores se mettront à jour en direct sur tous les écrans.
+*/
+const USE_FIREBASE = true;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBfcuoAvR2k4GccwuDGtz2KriEcqQUIZgw",
+  authDomain: "grand-prix-formula-1.firebaseapp.com",
+  databaseURL: "https://grand-prix-formula-1-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "grand-prix-formula-1",
+  storageBucket: "grand-prix-formula-1.firebasestorage.app",
+  messagingSenderId: "2939754915",
+  appId: "1:2939754915:web:27bdfaccbe70fc26f66216"
+};
+
+let firebase = null;
+let firebaseOK = false;
+
+if (USE_FIREBASE) {
+  try {
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const dbMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    const database = dbMod.getDatabase(app);
+    firebase = { ...dbMod, database };
+    firebaseOK = true;
+    document.getElementById("firebaseState").textContent = "Firebase actif — classement synchronisé";
+  } catch (err) {
+    console.error(err);
+    document.getElementById("firebaseState").textContent = "Firebase non connecté — mode local";
+  }
+}
+
+const scene = document.getElementById("scene");
+const lights = document.getElementById("lights");
+const bulbs = [0,1,2,3,4].map(i => document.getElementById("b"+i));
+const chrono = document.getElementById("chrono");
+const statusEl = document.getElementById("status");
+const startBtn = document.getElementById("startBtn");
+const rpmNeedle = document.getElementById("rpmNeedle");
+const speedNeedle = document.getElementById("speedNeedle");
+const scoresDiv = document.getElementById("scores");
+const modal = document.getElementById("modal");
+const finalTime = document.getElementById("finalTime");
+const playerName = document.getElementById("playerName");
+const playerClass = document.getElementById("playerClass");
+const saveBtn = document.getElementById("saveBtn");
+const ledStrip = [...document.querySelectorAll('.led')];
+const introOverlay = document.getElementById('introOverlay');
+const acceptGame = document.getElementById('acceptGame');
+const declineGame = document.getElementById('declineGame');
+
+let state = "idle";
+let greenStart = 0;
+let raf = null;
+let timers = [];
+let pendingScore = null;
+let scores = JSON.parse(localStorage.getItem("f1WowScores") || "[]");
+
+// AUDIO F1 ULTRA
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function createEngineSound(startFreq,endFreq,duration,volume=0.08){
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const noise = audioCtx.createBufferSource();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){
+    data[i] = (Math.random()*2-1)*0.22;
+  }
+
+  noise.buffer = buffer;
+
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+
+  osc1.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+  osc1.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+
+  osc2.frequency.setValueAtTime(startFreq*1.5, audioCtx.currentTime);
+  osc2.frequency.exponentialRampToValueAtTime(endFreq*1.5, audioCtx.currentTime + duration);
+
+  filter.type = 'lowpass';
+  filter.frequency.value = 1200;
+
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc1.start();
+  osc2.start();
+  noise.start();
+
+  osc1.stop(audioCtx.currentTime + duration);
+  osc2.stop(audioCtx.currentTime + duration);
+  noise.stop(audioCtx.currentTime + duration);
+}
+
+function playStartBeep(){
+  createEngineSound(180,220,0.18,0.03);
+}
+
+function playGreenGo(){
+  // volontairement silencieux pour éviter d'aider les joueurs
+}
+
+function playFalseStart(){
+  createEngineSound(110,70,0.9,0.09);
+}
+
+function playChampion(){
+  createEngineSound(500,1600,0.9,0.07);
+}
+
+function playEngineRise(){
+  createEngineSound(90,1200,2.6,0.09);
+}
+
+function playTurboRelease(){
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type='triangle';
+  osc.frequency.setValueAtTime(2200,audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(180,audioCtx.currentTime+0.35);
+  gain.gain.setValueAtTime(0.07,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.35);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime+0.35);
+}
+
+function clearTimers(){
+  timers.forEach(clearTimeout);
+  timers = [];
+  cancelAnimationFrame(raf);
+}
+
+function resetLights(){
+  lights.classList.remove("dangerPulse");
+  bulbs.forEach(b => b.className = "bulb red");
+}
+
+function setStatus(txt){ statusEl.textContent = txt; }
+
+function showTime(ms){
+  const value = Math.max(0, Math.min(999, Math.floor(ms)));
+  chrono.textContent = "00." + String(value).padStart(3,"0");
+}
+
+function randomGreenDelay(){ return 3000 + Math.random() * 5000; }
+
+function startRace(e){
+  e.stopPropagation();
+  clearTimers();
+  resetLights();
+  showTime(0);
+  state = "red";
+  pendingScore = null;
+  setStatus("FEUX ROUGES...");
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  playEngineRise();
+  startBtn.disabled = true;
+  startBtn.textContent = "DÉPART EN COURS";
+  rpmNeedle.style.transform = "rotate(135deg)";
+  speedNeedle.style.transform = "rotate(135deg)";
+
+  bulbs.forEach((b, i) => {
+    timers.push(setTimeout(() => {
+      if(state !== "red") return;
+      b.classList.add("on");
+      playStartBeep();
+      rpmNeedle.style.transform = `rotate(${135 + i * 24}deg)`;
+      if(ledStrip[i]) ledStrip[i].classList.add('active');
+    }, 450 + i * 470));
+  });
+
+  timers.push(setTimeout(() => {
+    if(state !== "red") return;
+    lights.classList.add("dangerPulse");
+    setStatus("ATTENDS LE VERT...");
+    timers.push(setTimeout(goGreen, randomGreenDelay()));
+  }, 450 + 5 * 470));
+}
+
+function goGreen(){
+  if(state !== "red") return;
+  state = "green";
+  lights.classList.remove("dangerPulse");
+  bulbs.forEach(b => b.className = "bulb green on");
+  greenStart = performance.now();
+  setStatus("🔥 GO GO GO 🔥");
+  document.body.style.cursor='pointer';
+  scene.classList.add("flashScreen");
+  setTimeout(() => scene.classList.remove("flashScreen"), 500);
+  tickChrono();
+}
+
+function tickChrono(){
+  if(state !== "green") return;
+  const elapsed = performance.now() - greenStart;
+  showTime(elapsed);
+  speedNeedle.style.transform = `rotate(${135 + Math.min(elapsed, 500) / 500 * 122}deg)`;
+  const activeCount=Math.min(10,Math.floor(elapsed/40));
+  ledStrip.forEach((l,i)=>l.classList.toggle('active',i<=activeCount));
+  raf = requestAnimationFrame(tickChrono);
+}
+
+function clickScene(e){
+  if(e.target.closest("button") || e.target.closest("input") || e.target.closest(".modal")) return;
+
+  if(state === "red"){
+    clearTimers();
+    resetLights();
+    state = "idle";
+    chrono.textContent = "ÉLIMINÉ";
+    setStatus("⛔ FAUX DÉPART ! ⛔");
+    playFalseStart();
+    scene.classList.add("shake");
+    setTimeout(() => scene.classList.remove("shake"), 900);
+    startBtn.disabled = false;
+    startBtn.textContent = "RELANCER";
+    return;
+  }
+
+  if(state === "green"){
+    const score = Math.floor(performance.now() - greenStart);
+    clearTimers();
+    state = "idle";
+    showTime(score);
+    setStatus(score < 170 ? "🏆 RÉFLEXE DE PILOTE F1 !" : score < 250 ? "⚡ EXCELLENT DÉPART !" : "🚦 PEUT MIEUX FAIRE");
+    if(score < 170){
+      scene.classList.add('championFlash');
+      playChampion();
+      playTurboRelease();
+      setTimeout(()=>scene.classList.remove('championFlash'),1800);
+    }
+    startBtn.disabled = false;
+    startBtn.textContent = "REJOUER";
+    pendingScore = score;
+
+    if(isTopFive(score)){
+      finalTime.textContent = score;
+      modal.style.display = "grid";
+      setTimeout(() => playerName.focus(), 80);
+    }
+  }
+}
+
+function isTopFive(score){
+  const top = [...scores].sort((a,b)=>a.score-b.score).slice(0,5);
+  return top.length < 5 || score < top[top.length-1].score;
+}
+
+function escapeHTML(str){
+  return String(str || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function renderScores(){
+  const top = [...scores].sort((a,b)=>a.score-b.score).slice(0,5);
+  scoresDiv.innerHTML = "";
+  if(top.length === 0){
+    scoresDiv.innerHTML = `<div class="scoreRow"><div class="rank">1</div><div class="who">Aucun pilote<small>À toi de jouer</small></div><div class="score">---</div></div>`;
+    return;
+  }
+  top.forEach((s,i)=>{
+    const row = document.createElement("div");
+    row.className = "scoreRow";
+    row.innerHTML = `<div class="rank">${i+1}</div><div class="who">${escapeHTML(s.name)}<small>${escapeHTML(s.classe)}</small></div><div class="score">${s.score} ms</div>`;
+    scoresDiv.appendChild(row);
+  });
+}
+
+async function saveScore(){
+  if(pendingScore === null) return;
+  const name = playerName.value.trim() || "Anonyme";
+  const classe = playerClass.value.trim() || "Classe ?";
+  const item = { name, classe, score: pendingScore, date: Date.now() };
+
+  if(firebaseOK){
+    const scoreRef = firebase.ref(firebase.database, "f1-reflexes/scores");
+    await firebase.push(scoreRef, item);
+  } else {
+    scores.push(item);
+    scores = scores.sort((a,b)=>a.score-b.score).slice(0,5);
+    localStorage.setItem("f1WowScores", JSON.stringify(scores));
+    renderScores();
+  }
+
+  pendingScore = null;
+  playerName.value = "";
+  playerClass.value = "";
+  modal.style.display = "none";
+}
+
+if(firebaseOK){
+  const q = firebase.query(
+    firebase.ref(firebase.database, "f1-reflexes/scores"),
+    firebase.orderByChild("score"),
+    firebase.limitToFirst(5)
+  );
+  firebase.onValue(q, snap => {
+    scores = [];
+    snap.forEach(child => scores.push(child.val()));
+    renderScores();
+  });
+} else {
+  renderScores();
+}
+
+startBtn.addEventListener("click", startRace);
+scene.addEventListener("click", clickScene);
+saveBtn.addEventListener("click", saveScore);
+
+acceptGame.addEventListener('click',()=>{
+  introOverlay.style.display='none';
+});
+
+declineGame.addEventListener('click',()=>{
+  window.location.href='https://www.google.com';
+});
+
+// Repères visuels des compteurs
+for(const gauge of [document.getElementById("rpmGauge"), document.getElementById("speedGauge")]){
+  for(let i=0;i<9;i++){
+    const t=document.createElement("div");
+    t.className="tick";
+    t.style.transform=`rotate(${135+i*18}deg) translateY(-44%)`;
+    gauge.appendChild(t);
+  }
+}
+</script>
+</body>
+</html>
