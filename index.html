@@ -236,11 +236,20 @@ button,input{font-family:inherit}
 
   <div class="modal" id="modal">
     <div class="modalBox">
-      <h2>🏆 Entrée dans le Top 5 ?</h2>
+      <h2>🏆 RECORD ! Entrée dans le Top 5</h2>
       <p>Temps réalisé : <b id="finalTime"></b> ms</p>
       <input id="playerName" maxlength="18" placeholder="Prénom" />
       <input id="playerClass" maxlength="12" placeholder="Classe ex : 4eB" />
       <button id="saveBtn">VALIDER LE SCORE</button>
+    </div>
+  </div>
+
+  <div class="modal" id="lostModal">
+    <div class="modalBox">
+      <h2>❌ PERDU !</h2>
+      <p>Ton temps ne rentre pas dans le Top 5.</p>
+      <p>Temps réalisé : <b id="lostTime"></b> ms</p>
+      <button id="retryBtn">RECOMMENCER</button>
     </div>
   </div>
 </div>
@@ -272,6 +281,9 @@ const scoresDiv = document.getElementById("scores");
 const firebaseStateEl = document.getElementById("firebaseState");
 const firebaseDebugEl = document.getElementById("firebaseDebug");
 const modal = document.getElementById("modal");
+const lostModal = document.getElementById("lostModal");
+const lostTime = document.getElementById("lostTime");
+const retryBtn = document.getElementById("retryBtn");
 const finalTime = document.getElementById("finalTime");
 const playerName = document.getElementById("playerName");
 const playerClass = document.getElementById("playerClass");
@@ -406,9 +418,16 @@ function clickScene(e){
     if(score < 170){ scene.classList.add('championFlash'); playChampion(); playTurboRelease(); setTimeout(()=>scene.classList.remove('championFlash'),1800); }
     startBtn.disabled = false; startBtn.textContent = "REJOUER";
     pendingScore = score;
-    finalTime.textContent = score;
-    modal.style.display = "grid";
-    setTimeout(() => playerName.focus(), 80);
+
+    if(isTopFiveScore(score)){
+      finalTime.textContent = score;
+      modal.style.display = "grid";
+      setTimeout(() => playerName.focus(), 80);
+    } else {
+      pendingScore = null;
+      lostTime.textContent = score;
+      lostModal.style.display = "grid";
+    }
   }
 }
 function escapeHTML(str){ return String(str || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
@@ -417,6 +436,12 @@ function normalizeScores(list){
   return [...list].map(s => ({ name:s?.name || s?.prenom || "Anonyme", classe:s?.classe || s?.class || "Classe ?", score:getScoreValue(s), date:s?.date || 0 }))
     .filter(s => s.score !== null).sort((a,b)=>a.score-b.score).slice(0,5);
 }
+function isTopFiveScore(score){
+  const top = normalizeScores(scores);
+  if(top.length < 5) return true;
+  return Number(score) < Number(top[4].score);
+}
+
 function renderScores(){
   const top = normalizeScores(scores);
   scoresDiv.innerHTML = "";
@@ -483,6 +508,13 @@ async function initFirebase(){
 startBtn.addEventListener("click", startRace);
 scene.addEventListener("click", clickScene);
 saveBtn.addEventListener("click", saveScore);
+retryBtn.addEventListener("click",()=>{
+  lostModal.style.display = "none";
+  showTime(0);
+  setStatus("PRÊT ?");
+  startBtn.disabled = false;
+  startBtn.textContent = "RÉFLEXE";
+});
 acceptGame.addEventListener('click',()=>{ introOverlay.style.display='none'; ensureAudio(); });
 declineGame.addEventListener('click',()=>{ window.location.href='https://www.google.com'; });
 for(const gauge of [document.getElementById("rpmGauge"), document.getElementById("speedGauge")]){
