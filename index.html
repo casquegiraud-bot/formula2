@@ -92,6 +92,9 @@
   .rules p{margin:7px 0;color:#e5e7eb;line-height:1.25}.rules b{color:var(--yellow)}.rules .warn{color:#ff6666;font-weight:1000}
   .leaderboard{position:absolute;right:18px;bottom:18px;z-index:55;width:360px;background:var(--panel);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:15px;box-shadow:0 20px 55px #000;backdrop-filter:blur(6px)}
   .firebaseState{font-size:12px;color:#9ca3af;margin-bottom:8px}
+  .firebaseState.ok{color:#72ffad;font-weight:900}
+  .firebaseState.error{color:#ff7373;font-weight:900}
+  .firebaseDebug{margin-top:8px;font-size:11px;color:#9ca3af;line-height:1.25;background:rgba(0,0,0,.25);padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
   .scoreRow{display:grid;grid-template-columns:32px 1fr 78px;align-items:center;gap:8px;padding:9px 8px;margin:6px 0;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08)}
   .scoreRow.empty{opacity:.45}
   .scoreRow.gold{background:linear-gradient(90deg,rgba(255,212,59,.28),rgba(255,255,255,.04));border-color:rgba(255,212,59,.35)}
@@ -310,11 +313,11 @@
     .haloRing{display:none}.haloCenter{display:block;top:45vh;height:18vh;width:10px;z-index:12}.cockpitBase{display:block;bottom:-12vh;height:42vh;z-index:7}
     .title{position:relative;top:auto;left:auto;transform:none;padding:10px 10px 0;z-index:90}.title h1{font-size:30px;line-height:1.05}.title p{font-size:12px;margin-top:4px}
     .gantry{position:relative;top:auto;left:auto;transform:none;width:94vw;margin:8px auto 4px;z-index:90}.gantryBar{height:10px}.lights{gap:6px;padding:8px;border-radius:12px}.lightPod{width:16vw;height:16vw;max-width:66px;max-height:66px;border-radius:10px}
-    .dashboard{position:relative;left:auto;bottom:auto;transform:none;width:94vw;height:auto;margin:8px auto 10px;z-index:100;grid-template-columns:74px 1fr 74px;gap:8px;padding:12px;border-radius:26px;background:linear-gradient(145deg,#222832,#030406 70%);box-shadow:0 18px 60px rgba(0,0,0,.95),inset 0 0 35px rgba(255,255,255,.06)}
+    .dashboard{position:relative;left:auto;bottom:auto;transform:none;width:94vw;height:auto;margin:8px auto 10px;z-index:100;grid-template-columns:74px 1fr 74px;gap:8px;padding:12px;border-radius:26px;background:radial-gradient(circle at 50% 0%,rgba(255,0,0,.18),transparent 34%),linear-gradient(145deg,#222832,#030406 70%);box-shadow:0 18px 60px rgba(0,0,0,.95),inset 0 0 35px rgba(255,255,255,.08),0 0 22px rgba(255,0,0,.22)}
     .gauge{width:70px;height:70px;margin:auto;border-width:3px}.gauge .gTitle{font-size:10px;top:34%}.gauge .gSub{display:none}.gauge::after{width:9px;height:9px}.needle{height:3px}.tick{height:7%}
     .centerPanel{padding:10px;min-height:190px;border-radius:20px}.chronoLabel{font-size:11px;letter-spacing:2px}#chrono{font-size:52px}#status{font-size:18px;min-height:28px}#startBtn{font-size:16px;width:100%;padding:14px}.led{height:9px}
-    .raceBanner{position:relative;left:auto;bottom:auto;width:94vw;min-height:170px;margin:8px auto;z-index:85;padding:14px;border-radius:18px;background:linear-gradient(145deg,rgba(8,12,20,.92),rgba(0,0,0,.82))}.raceBanner h3{font-size:20px}.raceBanner p{font-size:13px;margin:6px 0 10px}.trackMap{min-height:125px}.trackLabel{font-size:11px;bottom:6px}
-    .leaderboard{position:relative;right:auto;bottom:auto;width:94vw;margin:8px auto;z-index:95;padding:14px;border-radius:18px;background:linear-gradient(145deg,rgba(8,12,20,.94),rgba(0,0,0,.85))}.leaderboard h3{font-size:18px}.scoreRow{grid-template-columns:28px 1fr 72px;padding:8px 6px;margin:5px 0}.rank{font-size:16px}.who{font-size:14px}.who small{font-size:12px}.score{font-size:14px}
+    .raceBanner{position:relative;left:auto;bottom:auto;width:94vw;min-height:170px;margin:8px auto;z-index:85;padding:14px;border-radius:18px;background:linear-gradient(145deg,rgba(8,12,20,.92),rgba(0,0,0,.82))}.raceBanner h3{font-size:20px}.raceBanner p{font-size:13px;margin:6px 0 10px}.trackMap{min-height:125px;box-shadow:inset 0 0 28px rgba(255,212,59,.12),0 0 18px rgba(0,0,0,.6)}.trackLabel{font-size:11px;bottom:6px}
+    .leaderboard{position:relative;right:auto;bottom:auto;width:94vw;margin:8px auto;z-index:95;padding:14px;border-radius:18px;background:linear-gradient(145deg,rgba(8,12,20,.94),rgba(0,0,0,.85));box-shadow:0 16px 45px rgba(0,0,0,.95),0 0 18px rgba(255,212,59,.16)}.leaderboard h3{font-size:18px}.scoreRow{grid-template-columns:28px 1fr 72px;padding:8px 6px;margin:5px 0}.rank{font-size:16px}.who{font-size:14px}.who small{font-size:12px}.score{font-size:14px}
     .modal{position:fixed}.introOverlay{position:fixed}.introBox{padding:20px}.introBox h2{font-size:30px}.introBox p{font-size:15px}.rgpdWarn{font-size:13px}.introButtons{flex-direction:column}.acceptBtn,.declineBtn{width:100%}
   }
 </style>
@@ -410,8 +413,9 @@
 
   <div class="leaderboard">
     <h3>🏆 GRILLE DES 5 MEILLEURS</h3>
-    <div class="firebaseState" id="firebaseState">Mode local — Firebase désactivée</div>
+    <div class="firebaseState" id="firebaseState">Connexion Firebase en attente...</div>
     <div id="scores"></div>
+    <div class="firebaseDebug" id="firebaseDebug">Diagnostic : aucun test effectué.</div>
   </div>
 
   <div class="modal" id="modal">
@@ -459,10 +463,14 @@ if (USE_FIREBASE) {
     const database = dbMod.getDatabase(app);
     firebase = { ...dbMod, database };
     firebaseOK = true;
-    document.getElementById("firebaseState").textContent = "Firebase actif — classement synchronisé";
+    firebaseStateEl.textContent = "Firebase connecté — classement synchronisé";
+    firebaseStateEl.className = "firebaseState ok";
+    firebaseDebugEl.textContent = "Diagnostic : Firebase initialisé. En attente des scores...";
   } catch (err) {
     console.error(err);
-    document.getElementById("firebaseState").textContent = "Firebase non connecté — mode local";
+    firebaseStateEl.textContent = "Firebase ERREUR — mode local";
+    firebaseStateEl.className = "firebaseState error";
+    firebaseDebugEl.textContent = "Erreur initialisation Firebase : " + err.message;
   }
 }
 
@@ -475,6 +483,8 @@ const startBtn = document.getElementById("startBtn");
 const rpmNeedle = document.getElementById("rpmNeedle");
 const speedNeedle = document.getElementById("speedNeedle");
 const scoresDiv = document.getElementById("scores");
+const firebaseStateEl = document.getElementById("firebaseState");
+const firebaseDebugEl = document.getElementById("firebaseDebug");
 const modal = document.getElementById("modal");
 const finalTime = document.getElementById("finalTime");
 const playerName = document.getElementById("playerName");
@@ -698,12 +708,26 @@ function escapeHTML(str){
   return String(str || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 }
 
-function renderScores(){
-  const top = [...scores]
-    .filter(s => s && typeof s.score === 'number')
+function getScoreValue(s){
+  const value = Number(s?.score ?? s?.time ?? s?.temps);
+  return Number.isFinite(value) ? value : null;
+}
+
+function normalizeScores(list){
+  return [...list]
+    .map(s => ({
+      name: s?.name || s?.prenom || "Anonyme",
+      classe: s?.classe || s?.class || "Classe ?",
+      score: getScoreValue(s),
+      date: s?.date || 0
+    }))
+    .filter(s => s.score !== null)
     .sort((a,b)=>a.score-b.score)
     .slice(0,5);
+}
 
+function renderScores(){
+  const top = normalizeScores(scores);
   scoresDiv.innerHTML = "";
 
   for(let i=0;i<5;i++){
@@ -725,14 +749,24 @@ async function saveScore(){
   if(pendingScore === null) return;
   const name = playerName.value.trim() || "Anonyme";
   const classe = playerClass.value.trim() || "Classe ?";
-  const item = { name, classe, score: pendingScore, date: Date.now() };
+  const item = {
+    name,
+    classe,
+    score: Number(pendingScore),
+    date: Date.now(),
+    userAgent: navigator.userAgent.slice(0,80)
+  };
 
   if(firebaseOK){
     const scoreRef = firebase.ref(firebase.database, "f1-reflexes/scores");
     try{
-      await firebase.push(scoreRef, item);
+      const newRef = await firebase.push(scoreRef, item);
+      firebaseDebugEl.textContent = "Dernier score envoyé vers Firebase : " + item.score + " ms — ID " + newRef.key;
     }catch(err){
-      alert("Erreur Firebase : le score n’a pas été enregistré. Vérifie les règles .read/.write.");
+      firebaseStateEl.textContent = "Firebase ERREUR — score non envoyé";
+      firebaseStateEl.className = "firebaseState error";
+      firebaseDebugEl.textContent = "Erreur écriture Firebase : " + err.message;
+      alert("Erreur Firebase : le score n’a pas été enregistré. Vérifie les règles .read/.write. Détail : " + err.message);
       console.error(err);
     }
   } else {
@@ -752,8 +786,18 @@ if(firebaseOK){
   const q = firebase.ref(firebase.database, "f1-reflexes/scores");
   firebase.onValue(q, snap => {
     scores = [];
-    snap.forEach(child => scores.push(child.val()));
-    scores = scores.filter(s => s && typeof s.score === 'number').sort((a,b)=>a.score-b.score).slice(0,5);
+    snap.forEach(child => {
+      const val = child.val();
+      if(val && val.score !== undefined){
+        val.score = Number(val.score);
+        scores.push(val);
+      }
+    });
+    const totalFirebaseScores = scores.length;
+    scores = normalizeScores(scores);
+    firebaseStateEl.textContent = "Firebase connecté — " + totalFirebaseScores + " score(s) en base";
+    firebaseStateEl.className = "firebaseState ok";
+    firebaseDebugEl.textContent = "Lecture Firebase OK : " + totalFirebaseScores + " score(s) lus, Top 5 affiché.";
     renderScores();
   });
 } else {
