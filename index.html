@@ -297,7 +297,26 @@
   @media(max-width:950px){
     .rules{display:none}.leaderboard{right:10px;bottom:10px;width:310px}.dashboard{width:95vw;grid-template-columns:.75fr 1.5fr .75fr;gap:8px}.haloRing{display:none}.title h1{font-size:34px}.gantry{top:13vh}.footer{display:none}
   }
-  @media(max-width:700px){.leaderboard{display:none}.dashboard{bottom:2vh}.gauge .gSub{display:none}.centerPanel{padding:10px}.lights{gap:6px;padding:9px}.lightPod{border-radius:9px}}
+  @media(max-width:700px){
+    html,body{height:auto;min-height:100%;overflow:auto;background:#02030a}
+    body{cursor:pointer}
+    .scene{min-height:100svh;height:auto;overflow:auto;padding-bottom:22px;background:linear-gradient(180deg,#313b4a 0%,#111722 38%,#040509 100%)}
+    .grandstand,.rules,.haloRing,.haloCenter,.cockpitBase,.gridLine,.footer{display:none}
+    .track{top:19vh;width:130vw;height:56vh;opacity:.55}
+    .title{position:relative;top:auto;left:auto;transform:none;padding:12px 10px 0;z-index:70}
+    .title h1{font-size:30px;line-height:1.05}.title p{font-size:13px;margin-top:4px}
+    .gantry{position:relative;top:auto;left:auto;transform:none;width:94vw;margin:10px auto 8px;z-index:70}
+    .gantryBar{height:10px}.lights{gap:6px;padding:8px;border-radius:12px}.lightPod{width:16vw;height:16vw;max-width:66px;max-height:66px;border-radius:10px}
+    .dashboard{position:relative;left:auto;bottom:auto;transform:none;width:94vw;height:auto;margin:10px auto;z-index:80;grid-template-columns:1fr;gap:12px;padding:14px;border-radius:24px}
+    .gauge{width:128px;max-width:38vw;margin:auto}.gauge .gSub{display:none}.centerPanel{padding:12px;min-height:220px}.chronoLabel{font-size:12px}#chrono{font-size:60px}#status{font-size:20px;min-height:28px}#startBtn{font-size:17px;width:100%;padding:15px}
+    #rpmGauge{display:none}
+    #speedGauge{display:none}
+    .raceBanner{position:relative;left:auto;bottom:auto;width:94vw;min-height:150px;margin:10px auto;z-index:75;padding:14px;border-radius:18px}
+    .raceBanner h3{font-size:20px}.raceBanner p{font-size:13px;margin:6px 0 10px}.trackMap{min-height:112px}.trackLabel{font-size:11px;bottom:6px}
+    .leaderboard{position:relative;right:auto;bottom:auto;width:94vw;margin:10px auto;z-index:75;padding:14px;border-radius:18px}
+    .leaderboard h3{font-size:18px}.scoreRow{grid-template-columns:28px 1fr 72px;padding:8px 6px}.rank{font-size:16px}.who{font-size:14px}.who small{font-size:12px}.score{font-size:14px}
+    .modal{position:fixed}.introOverlay{position:fixed}.introBox{padding:20px}.introBox h2{font-size:30px}.introBox p{font-size:15px}.rgpdWarn{font-size:13px}.introButtons{flex-direction:column}.acceptBtn,.declineBtn{width:100%}
+  }
 </style>
 </head>
 <body>
@@ -664,11 +683,9 @@ function clickScene(e){
     startBtn.textContent = "REJOUER";
     pendingScore = score;
 
-    if(isTopFive(score)){
-      finalTime.textContent = score;
-      modal.style.display = "grid";
-      setTimeout(() => playerName.focus(), 80);
-    }
+    finalTime.textContent = score;
+    modal.style.display = "grid";
+    setTimeout(() => playerName.focus(), 80);
   }
 }
 
@@ -704,7 +721,12 @@ async function saveScore(){
 
   if(firebaseOK){
     const scoreRef = firebase.ref(firebase.database, "f1-reflexes/scores");
-    await firebase.push(scoreRef, item);
+    try{
+      await firebase.push(scoreRef, item);
+    }catch(err){
+      alert("Erreur Firebase : le score n’a pas été enregistré. Vérifie les règles .read/.write.");
+      console.error(err);
+    }
   } else {
     scores.push(item);
     scores = scores.sort((a,b)=>a.score-b.score).slice(0,5);
@@ -727,6 +749,7 @@ if(firebaseOK){
   firebase.onValue(q, snap => {
     scores = [];
     snap.forEach(child => scores.push(child.val()));
+    scores = scores.filter(s => s && typeof s.score === 'number').sort((a,b)=>a.score-b.score).slice(0,5);
     renderScores();
   });
 } else {
