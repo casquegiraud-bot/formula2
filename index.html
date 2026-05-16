@@ -463,14 +463,14 @@ if (USE_FIREBASE) {
     const database = dbMod.getDatabase(app);
     firebase = { ...dbMod, database };
     firebaseOK = true;
-    firebaseStateEl.textContent = "Firebase connecté — classement synchronisé";
-    firebaseStateEl.className = "firebaseState ok";
-    firebaseDebugEl.textContent = "Diagnostic : Firebase initialisé. En attente des scores...";
+    document.getElementById("firebaseState").textContent = "Firebase connecté — classement synchronisé";
+    document.getElementById("firebaseState").className = "firebaseState ok";
+    document.getElementById("firebaseDebug").textContent = "Diagnostic : Firebase initialisé. En attente des scores...";
   } catch (err) {
     console.error(err);
-    firebaseStateEl.textContent = "Firebase ERREUR — mode local";
-    firebaseStateEl.className = "firebaseState error";
-    firebaseDebugEl.textContent = "Erreur initialisation Firebase : " + err.message;
+    document.getElementById("firebaseState").textContent = "Firebase ERREUR — mode local";
+    document.getElementById("firebaseState").className = "firebaseState error";
+    document.getElementById("firebaseDebug").textContent = "Erreur initialisation Firebase : " + err.message;
   }
 }
 
