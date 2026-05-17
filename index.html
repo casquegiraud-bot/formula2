@@ -152,7 +152,24 @@ button,input{font-family:inherit}
 #startBtn{width:100%;max-width:260px;border:0;border-radius:16px;padding:14px 12px;background:radial-gradient(circle at 50% 35%,#ff4545,#a60000 70%);color:white;font-weight:1000;font-size:clamp(16px,4.8vw,24px);letter-spacing:.8px;cursor:pointer;box-shadow:0 7px 0 #5a0707,0 0 26px rgba(255,0,0,.5),0 16px 28px rgba(0,0,0,.85);text-transform:uppercase}
 #startBtn:active{transform:translateY(4px);box-shadow:0 3px 0 #5a0707,0 0 16px rgba(255,0,0,.5)}#startBtn:disabled{opacity:.62;cursor:not-allowed}
 .footer,.rules{display:none}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;place-items:center;padding:14px}.modalBox{width:min(430px,92vw);background:linear-gradient(145deg,#171c25,#06070b);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:22px;text-align:center;box-shadow:0 30px 90px #000}.modalBox h2{margin:0 0 10px;font-size:28px}.modalBox p{color:#d7dde7}.modalBox b{color:#72ffad}.modalBox input{width:100%;margin:8px 0;padding:14px;border-radius:12px;border:1px solid #4b5563;background:#05070b;color:white;font-size:17px}.modalBox button{margin-top:10px;width:100%;border:0;border-radius:12px;padding:15px;background:linear-gradient(#19d66d,#087b3e);color:white;font-size:18px;font-weight:1000;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;place-items:center;padding:14px}.modalBox{width:min(430px,92vw);background:linear-gradient(145deg,#171c25,#06070b);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:22px;text-align:center;box-shadow:0 30px 90px #000}.modalBox h2{margin:0 0 10px;font-size:28px}
+.trophyCup{
+  font-size:78px;
+  margin-bottom:8px;
+  filter:drop-shadow(0 0 18px rgba(255,212,59,.55));
+  animation:trophyBounce 1s ease-in-out infinite alternate;
+}
+.rankMessage{
+  font-size:20px;
+  font-weight:1000;
+  color:var(--yellow);
+  margin-bottom:10px;
+  text-shadow:0 0 12px rgba(255,212,59,.35);
+}
+@keyframes trophyBounce{
+  from{transform:translateY(0) scale(1)}
+  to{transform:translateY(-6px) scale(1.04)}
+}.modalBox p{color:#d7dde7}.modalBox b{color:#72ffad}.modalBox input{width:100%;margin:8px 0;padding:14px;border-radius:12px;border:1px solid #4b5563;background:#05070b;color:white;font-size:17px}.modalBox button{margin-top:10px;width:100%;border:0;border-radius:12px;padding:15px;background:linear-gradient(#19d66d,#087b3e);color:white;font-size:18px;font-weight:1000;cursor:pointer}
 .introOverlay{position:fixed;inset:0;z-index:250;background:radial-gradient(circle at center,rgba(20,25,35,.94),rgba(0,0,0,.98));display:flex;align-items:center;justify-content:center;padding:18px}.introBox{width:min(620px,92vw);background:linear-gradient(145deg,#131923,#05070b);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:22px;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.9)}.introBox h2{margin:0 0 10px;font-size:clamp(28px,8vw,42px);color:var(--yellow);text-shadow:0 4px 18px #000}.introBox p{color:#d9e2ec;line-height:1.35;font-size:15px;margin:9px 0}.rgpdWarn{margin-top:14px;padding:13px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#ffd9d9;font-weight:700;font-size:13px}.introButtons{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}.acceptBtn,.declineBtn{border:0;border-radius:14px;padding:15px 20px;font-size:17px;font-weight:1000;cursor:pointer}.acceptBtn{background:linear-gradient(#1ce276,#098b45);color:white}.declineBtn{background:linear-gradient(#ff4a4a,#a80f0f);color:white}
 .flashScreen{animation:flashScreen .18s linear 2}.shake{animation:shake .28s linear 3}.championFlash{animation:championFlash .6s linear 4}@keyframes flashScreen{50%{filter:brightness(1.8) saturate(1.4)}}@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}@keyframes championFlash{50%{filter:hue-rotate(40deg) brightness(1.4)}}
 @media(min-width:701px){
@@ -236,7 +253,9 @@ button,input{font-family:inherit}
 
   <div class="modal" id="modal">
     <div class="modalBox">
-      <h2>🏆 RECORD ! Entrée dans le Top 5</h2>
+      <div class="trophyCup">🏆</div>
+      <div class="rankMessage" id="rankMessage">TOP 5</div>
+      <h2>RECORD !
       <p>Temps réalisé : <b id="finalTime"></b> ms</p>
       <input id="playerName" maxlength="18" placeholder="Prénom" />
       <input id="playerClass" maxlength="12" placeholder="Classe ex : 4eB" />
@@ -285,6 +304,7 @@ const lostModal = document.getElementById("lostModal");
 const lostTime = document.getElementById("lostTime");
 const retryBtn = document.getElementById("retryBtn");
 const finalTime = document.getElementById("finalTime");
+const rankMessage = document.getElementById("rankMessage");
 const playerName = document.getElementById("playerName");
 const playerClass = document.getElementById("playerClass");
 const saveBtn = document.getElementById("saveBtn");
@@ -332,7 +352,27 @@ function createEngineSound(startFreq,endFreq,duration,volume=0.08){
 }
 function playStartBeep(){ createEngineSound(180,220,0.18,0.03); }
 function playFalseStart(){ createEngineSound(110,70,0.9,0.09); }
-function playChampion(){ createEngineSound(500,1600,0.9,0.07); }
+function playChampion(){
+  createEngineSound(500,1600,0.9,0.07);
+
+  if(!audioCtx) return;
+
+  const notes = [523,659,784,1046];
+  notes.forEach((freq,i)=>{
+    setTimeout(()=>{
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type='triangle';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.045;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.28);
+      osc.stop(audioCtx.currentTime+0.28);
+    },i*150);
+  });
+}
 function playEngineRise(){ createEngineSound(90,1200,2.6,0.09); }
 function playTurboRelease(){
   if(!audioCtx) return;
@@ -420,7 +460,22 @@ function clickScene(e){
     pendingScore = score;
 
     if(isTopFiveScore(score)){
+      const rank = getFutureRank(score);
+
       finalTime.textContent = score;
+
+      const labels = {
+        1:'🥇 VOUS ÊTES 1er DU CLASSEMENT !',
+        2:'🥈 VOUS ÊTES 2e DU CLASSEMENT !',
+        3:'🥉 VOUS ÊTES 3e DU CLASSEMENT !',
+        4:'🏁 VOUS ÊTES 4e DU CLASSEMENT !',
+        5:'🔥 VOUS ÊTES 5e DU CLASSEMENT !'
+      };
+
+      rankMessage.textContent = labels[rank] || '🏆 TOP 5';
+
+      playChampion();
+
       modal.style.display = "grid";
       setTimeout(() => playerName.focus(), 80);
     } else {
@@ -440,6 +495,11 @@ function isTopFiveScore(score){
   const top = normalizeScores(scores);
   if(top.length < 5) return true;
   return Number(score) < Number(top[4].score);
+}
+
+function getFutureRank(score){
+  const simulated = normalizeScores([...scores,{score:Number(score),name:'TMP',classe:'TMP'}]);
+  return simulated.findIndex(s=>s.name==='TMP') + 1;
 }
 
 function renderScores(){
