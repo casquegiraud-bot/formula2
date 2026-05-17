@@ -152,7 +152,29 @@ button,input{font-family:inherit}
 #startBtn{width:100%;max-width:260px;border:0;border-radius:16px;padding:14px 12px;background:radial-gradient(circle at 50% 35%,#ff4545,#a60000 70%);color:white;font-weight:1000;font-size:clamp(16px,4.8vw,24px);letter-spacing:.8px;cursor:pointer;box-shadow:0 7px 0 #5a0707,0 0 26px rgba(255,0,0,.5),0 16px 28px rgba(0,0,0,.85);text-transform:uppercase}
 #startBtn:active{transform:translateY(4px);box-shadow:0 3px 0 #5a0707,0 0 16px rgba(255,0,0,.5)}#startBtn:disabled{opacity:.62;cursor:not-allowed}
 .footer,.rules{display:none}
-.garageBtn{position:absolute;right:8px;top:8px;z-index:180;width:24px;height:24px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:rgba(0,0,0,.35);color:rgba(255,255,255,.38);font-size:13px;font-weight:900;cursor:pointer;display:grid;place-items:center;box-shadow:none}.garageBtn:hover{color:white;background:rgba(255,255,255,.12)}
+.garageBtn{
+  position:absolute;
+  right:10px;
+  top:10px;
+  z-index:220;
+  width:34px;
+  height:34px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:50%;
+  background:rgba(0,0,0,.45);
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  box-shadow:0 0 12px rgba(255,255,255,.15);
+  transition:.18s;
+}
+.garageBtn:hover{
+  transform:scale(1.08);
+  background:rgba(255,255,255,.14);
+  box-shadow:0 0 18px rgba(255,255,255,.28);
+}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;place-items:center;padding:14px}.modalBox{width:min(430px,92vw);background:linear-gradient(145deg,#171c25,#06070b);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:22px;text-align:center;box-shadow:0 30px 90px #000}.modalBox h2{margin:0 0 10px;font-size:28px}
 .trophyCup{
   font-size:78px;
@@ -252,7 +274,7 @@ button,input{font-family:inherit}
     <div class="gauge" id="speedGauge"><div class="needle" id="speedNeedle"></div><div class="gTitle">KM/H</div></div>
   </div>
 
-  <button class="garageBtn" id="garageBtn" title="Garage">⚙</button>
+  <button class="garageBtn" id="garageBtn" title="Garage">🏁</button>
 
   <div class="modal" id="garageModal">
     <div class="modalBox">
