@@ -152,6 +152,7 @@ button,input{font-family:inherit}
 #startBtn{width:100%;max-width:260px;border:0;border-radius:16px;padding:14px 12px;background:radial-gradient(circle at 50% 35%,#ff4545,#a60000 70%);color:white;font-weight:1000;font-size:clamp(16px,4.8vw,24px);letter-spacing:.8px;cursor:pointer;box-shadow:0 7px 0 #5a0707,0 0 26px rgba(255,0,0,.5),0 16px 28px rgba(0,0,0,.85);text-transform:uppercase}
 #startBtn:active{transform:translateY(4px);box-shadow:0 3px 0 #5a0707,0 0 16px rgba(255,0,0,.5)}#startBtn:disabled{opacity:.62;cursor:not-allowed}
 .footer,.rules{display:none}
+.garageBtn{position:absolute;right:8px;top:8px;z-index:180;width:24px;height:24px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:rgba(0,0,0,.35);color:rgba(255,255,255,.38);font-size:13px;font-weight:900;cursor:pointer;display:grid;place-items:center;box-shadow:none}.garageBtn:hover{color:white;background:rgba(255,255,255,.12)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;place-items:center;padding:14px}.modalBox{width:min(430px,92vw);background:linear-gradient(145deg,#171c25,#06070b);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:22px;text-align:center;box-shadow:0 30px 90px #000}.modalBox h2{margin:0 0 10px;font-size:28px}
 .trophyCup{
   font-size:78px;
@@ -251,6 +252,17 @@ button,input{font-family:inherit}
     <div class="gauge" id="speedGauge"><div class="needle" id="speedNeedle"></div><div class="gTitle">KM/H</div></div>
   </div>
 
+  <button class="garageBtn" id="garageBtn" title="Garage">⚙</button>
+
+  <div class="modal" id="garageModal">
+    <div class="modalBox">
+      <h2>🔧 GARAGE</h2>
+      <p>Code d’entrée administrateur</p>
+      <input id="garageCode" maxlength="8" inputmode="numeric" placeholder="Code" />
+      <button id="garageResetBtn">RESET DES SCORES</button>
+    </div>
+  </div>
+
   <div class="modal" id="modal">
     <div class="modalBox">
       <div class="trophyCup">🏆</div>
@@ -299,6 +311,10 @@ const speedNeedle = document.getElementById("speedNeedle");
 const scoresDiv = document.getElementById("scores");
 const firebaseStateEl = document.getElementById("firebaseState");
 const firebaseDebugEl = document.getElementById("firebaseDebug");
+const garageBtn = document.getElementById("garageBtn");
+const garageModal = document.getElementById("garageModal");
+const garageCode = document.getElementById("garageCode");
+const garageResetBtn = document.getElementById("garageResetBtn");
 const modal = document.getElementById("modal");
 const lostModal = document.getElementById("lostModal");
 const lostTime = document.getElementById("lostTime");
@@ -543,6 +559,35 @@ function renderScores(){
     scoresDiv.appendChild(row);
   }
 }
+async function resetScores(){
+  if(garageCode.value.trim() !== "1982"){
+    alert("Code incorrect.");
+    garageCode.value = "";
+    return;
+  }
+
+  if(firebaseOK){
+    try{
+      const scoreRef = firebase.ref(firebase.database, "f1-reflexes/scores");
+      await firebase.set(scoreRef, null);
+      firebaseDebugEl.textContent = "Garage : scores Firebase remis à zéro.";
+    }catch(err){
+      alert("Erreur reset Firebase : " + err.message);
+      return;
+    }
+  }
+
+  scores = [];
+  localStorage.removeItem("f1WowScores");
+  renderScores();
+  garageCode.value = "";
+  garageModal.style.display = "none";
+  showTime(0);
+  setStatus("PRÊT ?");
+  startBtn.disabled = false;
+  startBtn.textContent = "RÉFLEXE";
+}
+
 async function saveScore(){
   if(pendingScore === null) return;
   const name = playerName.value.trim() || "Anonyme";
@@ -603,6 +648,14 @@ retryBtn.addEventListener("click",()=>{
   startBtn.disabled = false;
   startBtn.textContent = "RÉFLEXE";
 });
+
+garageBtn.addEventListener("click",()=>{
+  garageModal.style.display = "grid";
+  garageCode.value = "";
+  setTimeout(()=>garageCode.focus(),80);
+});
+
+garageResetBtn.addEventListener("click", resetScores);
 acceptGame.addEventListener('click',()=>{ introOverlay.style.display='none'; ensureAudio(); });
 declineGame.addEventListener('click',()=>{ window.location.href='https://www.google.com'; });
 for(const gauge of [document.getElementById("rpmGauge"), document.getElementById("speedGauge")]){
