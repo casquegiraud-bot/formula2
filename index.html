@@ -357,21 +357,49 @@ function playChampion(){
 
   if(!audioCtx) return;
 
-  const notes = [523,659,784,1046];
-  notes.forEach((freq,i)=>{
+  // Hymne de victoire original inspiré ambiance stade/champion
+  const melody = [
+    {f:523,d:0.35},{f:659,d:0.35},{f:784,d:0.45},
+    {f:1046,d:0.6},{f:988,d:0.45},{f:784,d:0.45},
+    {f:659,d:0.4},{f:784,d:0.5},{f:1174,d:0.8},
+    {f:1046,d:0.7}
+  ];
+
+  let t = 0;
+
+  melody.forEach(note=>{
     setTimeout(()=>{
-      const osc = audioCtx.createOscillator();
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type='triangle';
-      osc.frequency.value = freq;
-      gain.gain.value = 0.045;
-      osc.connect(gain);
+
+      osc1.type='sawtooth';
+      osc2.type='triangle';
+
+      osc1.frequency.value = note.f;
+      osc2.frequency.value = note.f*0.5;
+
+      gain.gain.setValueAtTime(0.055,audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime + note.d);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.start();
-      gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.28);
-      osc.stop(audioCtx.currentTime+0.28);
-    },i*150);
+
+      osc1.start();
+      osc2.start();
+
+      osc1.stop(audioCtx.currentTime + note.d);
+      osc2.stop(audioCtx.currentTime + note.d);
+    }, t*1000);
+
+    t += note.d;
   });
+
+  // montée finale style foule / victoire
+  setTimeout(()=>{
+    createEngineSound(700,1800,1.8,0.08);
+  },3200);
 }
 function playEngineRise(){ createEngineSound(90,1200,2.6,0.09); }
 function playTurboRelease(){
